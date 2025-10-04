@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini E-Learning Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: 20px auto;
+    }
+    .course-list, .lesson-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #4CAF50;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: background 0.3s;
+      cursor: pointer;
+      border: none;
+    }
+    .button:hover {
+      background: #45a049;
+    }
+    .back-button {
+      margin-bottom: 20px;
+      display: inline-block;
+      background: #555;
+    }
+    .back-button:hover {
+      background: #333;
+    }
+    .progress {
+      margin: 10px 0;
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #4CAF50;
+      transition: width 0.4s;
+    }
+    .completed {
+      background: #28a745;
+    }
+    /* Forms */
+    .form-panel {
+      max-width: 400px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .form-panel input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    .form-panel p {
+      margin: 5px 0 0 0;
+      font-size: 14px;
+    }
+    .form-toggle {
+      color: #4CAF50;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Mini E-Learning Platform</h1>
+</header>
+
+<div class="container" id="app">
+  <!-- Dynamic content -->
+</div>
+
+<script>
+  const courses = [
+    { id: 1, title: "HTML Basics", description: "Learn the fundamentals of HTML.", lessons: ["Intro", "Tags", "Forms", "Tables"] },
+    { id: 2, title: "CSS Essentials", description: "Understand styling with CSS.", lessons: ["Selectors", "Box Model", "Flexbox", "Grid"] },
+    { id: 3, title: "JavaScript for Beginners", description: "Start coding with JavaScript.", lessons: ["Variables", "Functions", "Events", "DOM"] }
+  ];
+
+  let currentUser = null;
+  const app = document.getElementById("app");
+
+  // Render Sign Up Form
+  function renderSignUp() {
+    app.innerHTML = `
+      <div class="form-panel">
+        <h2>Sign Up</h2>
+        <input type="text" id="signup-username" placeholder="Username" />
+        <input type="email" id="signup-email" placeholder="Email" />
+        <input type="password" id="signup-password" placeholder="Password" />
+        <button class="button" onclick="signUp()">Sign Up</button>
+        <p>Already have an account? <span class="form-toggle" onclick="renderLogin()">Login here</span></p>
+      </div>
+    `;
+  }
+
+  // Render Login Form
+  function renderLogin() {
+    app.innerHTML = `
+      <div class="form-panel">
+        <h2>Login</h2>
+        <input type="text" id="login-username" placeholder="Username" />
+        <input type="password" id="login-password" placeholder="Password" />
+        <button class="button" onclick="login()">Login</button>
+        <p>Don't have an account? <span class="form-toggle" onclick="renderSignUp()">Sign Up here</span></p>
+      </div>
+    `;
+  }
+
+  // Sign Up Function
+  function signUp() {
+    const username = document.getElementById("signup-username").value.trim();
+    const email = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value.trim();
+
+    if (!username || !email || !password) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    if (localStorage.getItem(username)) {
+      alert("Username already exists. Please choose another.");
+      return;
+    }
+
+    // Save user in localStorage
+    const userData = { email, password, completedCourses: [] };
+    localStorage.setItem(username, JSON.stringify(userData));
+    alert("Sign-up successful! Please login.");
+    renderLogin();
+  }
+
+  // Login Function
+  function login() {
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    const user = JSON.parse(localStorage.getItem(username));
+    if (!user || user.password !== password) {
+      alert("Invalid username or password");
+      return;
+    }
+
+    currentUser = username;
+    renderHome();
+  }
+
+  // Render Home Page
+  function renderHome() {
+    const userData = JSON.parse(localStorage.getItem(currentUser));
+    app.innerHTML = `
+      <h2>Welcome, ${currentUser}</h2>
+      <h3>Available Courses</h3>
+      <div class="course-list">
+        ${courses.map(course => {
+          const progress = userData.completedCourses.includes(course.id) ? 100 : 0;
+          return `
+            <div class="card" onclick="renderCourse(${course.id})">
+              <h3>${course.title}</h3>
+              <p>${course.description}</p>
+              <div class="progress">
+                <div class="progress-bar" style="width: ${progress}%;"></div>
+              </div>
+              <p><strong>${progress}% completed</strong></p>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // Render Course Detail
+  function renderCourse(id) {
+    const course = courses.find(c => c.id === id);
+    const userData = JSON.parse(localStorage.getItem(currentUser));
+    const completed = userData.completedCourses.includes(id);
+    const progress = completed ? 100 : 0;
+
+    app.innerHTML = `
+      <button class="button back-button" onclick="renderHome()">← Back to Courses</button>
+      <h2>${course.title}</h2>
+      <p>${course.description}</p>
+
+      <h3>Lessons</h3>
+      <ul class="lesson-list">
+        ${course.lessons.map(lesson => `<li class="card">${lesson}</li>`).join('')}
+      </ul>
+
+      <div class="progress">
+        <div class="progress-bar" style="width: ${progress}%;"></div>
+      </div>
+      <p><strong>${progress}% completed</strong></p>
+
+      <button class="button ${completed ? 'completed' : ''}" onclick="markCompleted(${id})">
+        ${completed ? "Completed ✔" : "Mark as Completed"}
+      </button>
+    `;
+  }
+
+  // Mark course completed
+  function markCompleted(id) {
+    const userData = JSON.parse(localStorage.getItem(currentUser));
+    if (!userData.completedCourses.includes(id)) {
+      userData.completedCourses.push(id);
+      localStorage.setItem(currentUser, JSON.stringify(userData));
+    }
+    renderCourse(id);
+  }
+
+  // Start with login form
+  renderLogin();
+</script>
+
+</body>
+</html>
